@@ -1,0 +1,37 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using EvolveGames;
+
+public class PlayerTeleporter : MonoBehaviour
+{
+    public Transform player;
+    public PlayerController playerController;
+
+    public void TeleporttoTarget(Vector3 targetPosition)
+    {
+        if (IsTargetPositionValid(targetPosition))
+        {
+            playerController.DisableMovement();
+            player.transform.position = targetPosition;
+            Debug.Log("Teleported");
+            StartCoroutine(EnableMovementAfterDelay());
+        }
+        else
+        {
+            Debug.Log("Invalid position.");
+        }
+       
+    }
+
+    IEnumerator EnableMovementAfterDelay()
+    {
+        yield return new WaitForSeconds(0.1f);
+        playerController.EnableMovement();
+    }
+
+    bool IsTargetPositionValid(Vector3 targetPosition)
+    {
+        return true;
+    }
+}

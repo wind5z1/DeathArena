@@ -1,0 +1,163 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+
+namespace EvolveGames
+{
+    public class ItemChange : MonoBehaviour
+    {
+        [Header("Item Change")]
+        [SerializeField] public Animator ani;
+        [SerializeField] Image ItemCanvasLogo;
+        [SerializeField] bool LoopItems = true;
+        [SerializeField, Tooltip("You can add your new item here.")] GameObject[] Items;
+        [SerializeField, Tooltip("These logos must have the same order as the items.")] Sprite[] ItemLogos;
+        [SerializeField] int ItemIdInt;
+        int MaxItems;
+        int ChangeItemInt;
+        [HideInInspector] public bool DefiniteHide;
+        bool ItemChangeLogo;
+
+        [Header("Gun Switching")]
+        public List<GameObject> Guns;
+        private int currentGunIndex = 0;
+        public List<TextMeshProUGUI> GunsTMPro;
+        public TextMeshProUGUI shootingGunNameText;
+        public TextMeshProUGUI shotgunGameNameText;
+
+        private void Start()
+        {
+            if (ani == null && GetComponent<Animator>()) ani = GetComponent<Animator>();
+            Color OpacityColor = ItemCanvasLogo.color;
+            OpacityColor.a = 0;
+            ItemCanvasLogo.color = OpacityColor;
+            ItemChangeLogo = false;
+            DefiniteHide = false;
+            ChangeItemInt = ItemIdInt;
+            ItemCanvasLogo.sprite = ItemLogos[ItemIdInt];
+            MaxItems = Items.Length - 1;
+            foreach(var gun in Guns)
+            {
+                gun.SetActive(false);
+            }
+            Guns[currentGunIndex].SetActive(true);
+
+            if(GunsTMPro.Count > currentGunIndex)
+            {
+                GunsTMPro[currentGunIndex].gameObject.SetActive(true);
+            }
+            StartCoroutine(ItemChangeObject());
+        }
+        private void Update()
+        {
+            
+            if (ItemIdInt < 0) ItemIdInt = LoopItems ? MaxItems : 0;
+            if (ItemIdInt > MaxItems) ItemIdInt = LoopItems ? 0 : MaxItems;
+
+
+            if (ItemIdInt != ChangeItemInt)
+            {
+                ChangeItemInt = ItemIdInt;
+                StartCoroutine(ItemChangeObject());
+            }
+
+            if (Input.GetKeyDown(KeyCode.G) && (!Shotgun.Instance.isReloading || !Shooting.Instance.isReloading))
+            {
+                SwitchGun();
+                SetGunNameTextVisibility();
+            }
+        }
+
+        void SetGunNameTextVisibility()
+        {
+            if(currentGunIndex == 0)
+            {
+                if (shootingGunNameText != null)
+                    shootingGunNameText.gameObject.SetActive(true);
+                if(shotgunGameNameText != null)
+                {
+                    shotgunGameNameText.gameObject.SetActive(false);
+                }
+            }else if(currentGunIndex == 1)
+            {
+                if (shootingGunNameText != null)
+                    shootingGunNameText.gameObject.SetActive(false);
+                if (shotgunGameNameText != null)
+                    shotgunGameNameText.gameObject.SetActive(true);
+            }
+        }
+
+        public void InitializeGuns(GameObject gun1, GameObject gun2)
+        {
+            Guns = new List<GameObject> { gun1, gun2 };
+        }
+
+        public void SwitchGun()
+        {
+            Shotgun.Instance.isReloading = false;
+            Shooting.Instance.isReloading = false;
+
+            Guns[currentGunIndex].SetActive(false);
+
+                if (GunsTMPro.Count > currentGunIndex)
+                {
+                    GunsTMPro[currentGunIndex].gameObject.SetActive(false);
+                }
+            currentGunIndex++;
+                if (currentGunIndex >= Guns.Count)
+                {
+                    currentGunIndex = 0;
+                }
+                Guns[currentGunIndex].SetActive(true);
+
+                if (GunsTMPro.Count > currentGunIndex)
+                {
+                    GunsTMPro[currentGunIndex].gameObject.SetActive(true);
+           
+                }
+        }
+
+        IEnumerator ItemChangeObject()
+        {
+            if(!DefiniteHide) ani.SetBool("Hide", true);
+            yield return new WaitForSeconds(0.3f);
+            for (int i = 0; i < (MaxItems + 1); i++)
+            {
+                Items[i].SetActive(false);
+            }
+            Items[ItemIdInt].SetActive(true);
+            if (!ItemChangeLogo) StartCoroutine(ItemLogoChange());
+
+            if (!DefiniteHide) ani.SetBool("Hide", false);
+        }
+
+        IEnumerator ItemLogoChange()
+        {
+            ItemChangeLogo = true;
+            yield return new WaitForSeconds(0.5f);
+            ItemCanvasLogo.sprite = ItemLogos[ItemIdInt];
+            yield return new WaitForSeconds(0.1f);
+            ItemChangeLogo = false;
+        }
+
+        private void FixedUpdate()
+        {
+            
+            if (ItemChangeLogo)
+            {
+                Color OpacityColor = ItemCanvasLogo.color;
+                OpacityColor.a = Mathf.Lerp(OpacityColor.a, 0, 20 * Time.deltaTime);
+                ItemCanvasLogo.color = OpacityColor;
+            }
+            else
+            {
+                Color OpacityColor = ItemCanvasLogo.color;
+                OpacityColor.a = Mathf.Lerp(OpacityColor.a, 1, 6 * Time.deltaTime);
+                ItemCanvasLogo.color = OpacityColor;
+            }
+        }
+    }
+
+}

@@ -1,0 +1,64 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.AI;
+using System;
+
+public class AIDamageHandler : MonoBehaviour
+{
+    public int maxHealth = 100;
+    public int currentHealth;
+    private Animator aiAnimator;
+    private NavMeshAgent agent;
+    public AIAttack aIAttack;
+    public bool isDead = false;
+    public event Action OnDeath;
+    public AudioClip deathAudioClip;
+    private AudioSource audioSource;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        currentHealth = maxHealth;
+        aiAnimator = GetComponent<Animator>();
+        agent = GetComponent<NavMeshAgent>();
+
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.clip = deathAudioClip;
+    }
+
+    public void TakeDamage(int damage)
+    {
+        if(currentHealth > 0)
+        {
+            currentHealth -= damage;
+        }
+        if (currentHealth <= 0 && !isDead)
+        {
+            
+            Die();
+            
+        }
+
+    }
+
+    public void Die()
+    {
+        isDead = true;
+        agent.isStopped = true;
+        aIAttack.canAttack = false;
+        aiAnimator.SetTrigger("Death");
+        if(deathAudioClip != null)
+        {
+            audioSource.PlayOneShot(deathAudioClip);
+        }
+        StartCoroutine(DestroyAfterAnimation());
+        OnDeath?.Invoke();
+    }
+
+    IEnumerator DestroyAfterAnimation()
+    {
+        yield return new WaitForSeconds(2f);
+        Destroy(gameObject);
+    }
+}

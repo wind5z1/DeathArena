@@ -1,0 +1,81 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using TMPro;
+
+public class AmmoBox : MonoBehaviour
+{
+    public int ammoAmount = 10;
+    private bool isPlayerNear = false;
+    private Animator boxAnimator;
+    public Shooting shootingScript;
+    public TextMeshProUGUI riffleBulletText;
+    public TextMeshProUGUI pickupText;
+    public AudioClip opensound;
+    private AudioSource audioSource;
+
+    private void Start()
+    {
+        boxAnimator = GetComponent<Animator>();
+        boxAnimator.enabled = false;
+
+        audioSource = gameObject.AddComponent<AudioSource>();
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            isPlayerNear = true;
+        }
+    }
+    private void OnCollisionExit(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            isPlayerNear = false;
+        }
+    }
+
+    private void Update()
+    {
+        if(isPlayerNear && Input.GetKeyDown(KeyCode.E))
+        {
+            if (!shootingScript.enabled)
+            {
+                pickupText.text = "Please press 'G' to riffle for picking up riffle ammo. ";
+                StartCoroutine(ClearTextAfterDelay(1f));
+            }
+            else
+            {
+                StartCoroutine(OpenAmmoBox(shootingScript));
+            }
+        }
+    }
+    // Start is called before the first frame update
+    IEnumerator OpenAmmoBox(Shooting shootingScript)
+    {
+        if(opensound != null)
+        {
+            audioSource.PlayOneShot(opensound);
+        }
+        boxAnimator.enabled = true;
+        boxAnimator.Play("opened_closed");
+        yield return new WaitForSeconds(1f);
+        boxAnimator.enabled = false;
+        shootingScript.AddBullets(ammoAmount);
+        riffleBulletText.text = "Picked Up Riffle Bullet";
+        yield return new WaitForSeconds(1f);
+        riffleBulletText.text = " ";
+        gameObject.SetActive(false);
+    }
+
+    private IEnumerator ClearTextAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        riffleBulletText.text = "";
+    }
+
+ 
+   
+}

@@ -1,0 +1,56 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using TMPro;
+
+public class Placeblock : MonoBehaviour
+{
+    public GameObject blockPrefab;
+    public Camera playerCamera;
+    public AISpawner aISpawner;
+    public float destructionDelay = 5f;
+    public TextMeshProUGUI standCountText;
+
+    private void Start()
+    {
+        UpdateStandCountText();
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            if(aISpawner.allowedPrefabCount > 0)
+            {
+                PlacePrefab();
+                UpdateStandCountText();
+            }
+        }
+    }
+
+    void PlacePrefab()
+    {
+
+        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
+        RaycastHit hit;
+
+        if(Physics.Raycast(ray,out hit))
+        {
+            GameObject newBlock = Instantiate(blockPrefab, hit.point, Quaternion.identity);
+            aISpawner.allowedPrefabCount--;
+            UpdateStandCountText();
+            StartCoroutine(DestroyAfterDelay(newBlock));
+        }
+    }
+
+    IEnumerator DestroyAfterDelay(GameObject prefabInstance)
+    {
+        yield return new WaitForSeconds(destructionDelay);
+        Destroy(prefabInstance);
+    }
+    public void UpdateStandCountText()
+    {
+        standCountText.text = "Stand count: " + aISpawner.allowedPrefabCount;
+    }
+}
